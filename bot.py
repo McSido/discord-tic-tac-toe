@@ -27,9 +27,15 @@ async def new_game(ctx):
     await ctx.send(game.print())
 
 
+@bot.command(name='p', help="place your token")
+async def place_short(ctx: commands.Context, x_str: str, y: int):
+    await place(ctx, x_str, y)
+
+
 @bot.command(name='place', help="place your token")
 async def place(ctx: commands.Context, x_str: str, y: int):
     name = ctx.author.nick if ctx.author.nick else ctx.author.name
+    x_str = x_str.upper()
 
     valid, msg = verify(x_str, y)
 
@@ -44,6 +50,14 @@ async def place(ctx: commands.Context, x_str: str, y: int):
     except Exception as e:
         await ctx.send(e)
     else:
+        if game.check_full():
+            await ctx.send(game.print())
+            await ctx.send(f"It's a draw." +
+                           f"Better luck next time" +
+                           " :arrows_counterclockwise:")
+            game.reset()
+            return
+
         winner = game.check_winner()
         if (winner):
             await ctx.send(game.print())
@@ -51,8 +65,10 @@ async def place(ctx: commands.Context, x_str: str, y: int):
                            f"Congratulations {name}" +
                            " :partying_face:")
             game.reset()
+            return
         else:
             await ctx.send(game.print())
+            return
 
 
 @place.error

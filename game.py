@@ -18,6 +18,13 @@ class Game():
         self.current_player = (self.current_player+1) % 2
         self.field[y][x] = self.player_symbol[self.current_player]
 
+    def check_full(self):
+        for i in range(3):
+            for j in range(3):
+                if self.field[i][j] == " ":
+                    return False
+        return True
+
     def check_winner(self) -> Optional[str]:
         # Diagonals
         if (self.field[0][0] == self.field[1][1] == self.field[2][2] != " "):
@@ -50,7 +57,7 @@ class Game():
 
 def verify(x_str: str, y: int):
     if (x_str not in ["A", "B", "C"]):
-        return False, "Only A, B, C"
+        return False, "Only a, A, b, B, c, C"
     if(y not in [1, 2, 3]):
         return False, "Only 1, 2, 3"
     return True, None
