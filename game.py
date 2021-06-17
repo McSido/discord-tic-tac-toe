@@ -24,6 +24,17 @@ class Game():
             return self.player_symbol[self.current_player]
         if (self.field[0][2] == self.field[1][1] == self.field[2][0] != " "):
             return self.player_symbol[self.current_player]
+        for i in range(3):
+            if (self.field[i][0]
+                == self.field[i][1]
+                    == self.field[i][2]
+                    != " "):
+                return self.player_symbol[self.current_player]
+            if (self.field[0][i]
+                == self.field[1][i]
+                    == self.field[2][i]
+                    != " "):
+                return self.player_symbol[self.current_player]
 
         return None
 

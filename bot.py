@@ -51,7 +51,6 @@ async def place(ctx: commands.Context, x_str: str, y: int):
                            f"Congratulations {name}" +
                            " :partying_face:")
             game.reset()
-            await ctx.send(game.print())
         else:
             await ctx.send(game.print())
 
