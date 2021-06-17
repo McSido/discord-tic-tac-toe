@@ -26,7 +26,7 @@ async def new_game(ctx):
     await ctx.send("New game started")
     await ctx.send(game.print())
 
-
+# TODO: Handle combined input
 @bot.command(name='p', help="place your token")
 async def place_short(ctx: commands.Context, x_str: str, y: int):
     await place(ctx, x_str, y)
@@ -46,7 +46,7 @@ async def place(ctx: commands.Context, x_str: str, y: int):
     x = x_mapping[x_str]
 
     try:
-        game.setField(x, y-1)
+        game.setField(x, y-1, ctx.author)
     except Exception as e:
         await ctx.send(e)
     else:
@@ -69,6 +69,11 @@ async def place(ctx: commands.Context, x_str: str, y: int):
         else:
             await ctx.send(game.print())
             return
+
+
+@place_short.error
+async def place_short_error(ctx, error):
+    await place_error(ctx, error)
 
 
 @place.error
