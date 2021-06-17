@@ -2,7 +2,9 @@ import os
 import random
 from dotenv import load_dotenv
 from discord.ext import commands
-from game import Game, verify
+from game import Game
+import processor
+from typing import Optional
 
 
 load_dotenv()
@@ -15,60 +17,20 @@ bot = commands.Bot(command_prefix='!3')
 async def on_ready():
     print(f'{bot.user.name} has connected to Discord!')
 
-x_mapping = {"A": 0, "B": 1, "C": 2}
-game = Game()
-
 
 @bot.command(name='new', help="Start a new game")
 async def new_game(ctx):
-    game.reset()
+    processor.new_game()
 
-    await ctx.send("New game started")
-    await ctx.send(game.print())
 
-# TODO: Handle combined input
 @bot.command(name='p', help="place your token")
-async def place_short(ctx: commands.Context, x_str: str, y: int):
-    await place(ctx, x_str, y)
+async def place_short(ctx: commands.Context, arg1: str, arg2: Optional[int]):
+    await processor.place(ctx, arg1, arg2)
 
 
 @bot.command(name='place', help="place your token")
-async def place(ctx: commands.Context, x_str: str, y: int):
-    name = ctx.author.nick if ctx.author.nick else ctx.author.name
-    x_str = x_str.upper()
-
-    valid, msg = verify(x_str, y)
-
-    if (not valid):
-        await ctx.send(msg)
-        return
-
-    x = x_mapping[x_str]
-
-    try:
-        game.setField(x, y-1, ctx.author)
-    except Exception as e:
-        await ctx.send(e)
-    else:
-        if game.check_full():
-            await ctx.send(game.print())
-            await ctx.send(f"It's a draw." +
-                           f"Better luck next time" +
-                           " :arrows_counterclockwise:")
-            game.reset()
-            return
-
-        winner = game.check_winner()
-        if (winner):
-            await ctx.send(game.print())
-            await ctx.send(f"**{winner}** has won\n" +
-                           f"Congratulations {name}" +
-                           " :partying_face:")
-            game.reset()
-            return
-        else:
-            await ctx.send(game.print())
-            return
+async def place(ctx: commands.Context,  arg1: str, arg2: Optional[int]):
+    await processor.place(ctx, arg1, arg2)
 
 
 @place_short.error

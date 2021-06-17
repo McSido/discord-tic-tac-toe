@@ -59,11 +59,3 @@ class Game():
 2 {"|".join(self.field[1])}
   ------
 3 {"|".join(self.field[2])}```"""
-
-
-def verify(x_str: str, y: int):
-    if (x_str not in ["A", "B", "C"]):
-        return False, "Only a, A, b, B, c, C"
-    if(y not in [1, 2, 3]):
-        return False, "Only 1, 2, 3"
-    return True, None
