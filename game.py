@@ -18,7 +18,7 @@ class Game():
             raise Exception("Field already filled")
 
         if self.current_player_user == player:
-            raise Exception(f"{player_name} - Wait your turn!")
+            raise Exception(f"{player_name} :unamused: Wait your turn!")
 
         self.current_player_idx = (self.current_player_idx+1) % 2
         self.field[y][x] = self.player_symbol[self.current_player_idx]
