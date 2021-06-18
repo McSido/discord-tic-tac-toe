@@ -33,6 +33,11 @@ class Board():
         if self._get_current_player().user == player:
             raise Exception(f"{user_name(player)} :unamused: Wait your turn!")
 
+            if player not in [p.user for p in self.player]:
+                raise Exception(
+                    f"Sorry {user_name(player)} you are" +
+                    " not part of the current game :confused:")
+
         self.current_player_idx = (self.curr_player_idx+1) % 2
         self.field[y][x] = self._get_current_player().symbol
         self.current_player_user = player

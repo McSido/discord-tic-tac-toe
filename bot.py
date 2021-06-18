@@ -23,7 +23,7 @@ async def on_ready():
 
 @bot.command(name='new', help="Start a new game. Needs a second player")
 async def new_game(ctx, player2: User):
-    await game.new_game(ctx, ctx.author, player2)
+    await game.new_game(ctx, ctx.author, player2, bot.user)
 
 
 @bot.command(name='p', help="place your token")

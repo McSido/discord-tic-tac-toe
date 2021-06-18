@@ -20,7 +20,16 @@ class Game():
     async def new_game(self,
                        ctx: commands.Context,
                        creator: User,
-                       otherPlayer: User):
+                       otherPlayer: User,
+                       botUser: User):
+        if creator == otherPlayer:
+            await ctx.send("Sorry you can't play against yourself!")
+            await ctx.send("You need to find some friends :wink:")
+            return
+        if botUser == otherPlayer:
+            await ctx.send("Sorry you can't play against me :confused:")
+            await ctx.send("The robot uprising hasn't started :robot:")
+            return
 
         if ctx.channel.id in self._boards:
             board = self._get_board(ctx.channel)
