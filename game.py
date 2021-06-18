@@ -1,61 +1,119 @@
-from typing import Optional
+import os
+from typing import Dict, Optional, Tuple
+
+import discord.abc as abc
+from discord import User
+from discord.ext import commands
+from dotenv import load_dotenv
+
+from board import Board
+from utils import user_name
 
 
 class Game():
-    player_symbol = ["O", "X"]
+    _x_mapping = {"A": 0, "B": 1, "C": 2}
 
     def __init__(self):
-        self.reset()
+        # Channel -> Board
+        self._boards: Dict[abc.Messageable, Board] = {}
 
-    def reset(self):
-        self.field = [[" ", " ", " "] for i in range(3)]
-        self.current_player_idx = 0
-        self.current_player_user = None
+    async def new_game(self,
+                       ctx: commands.Context,
+                       creator: User,
+                       otherPlayer: User):
+        board = self._get_board(ctx.channel)
 
-    def setField(self, x: int, y: int, player):
-        player_name = player.nick if player.nick else player.name
-        if self.field[y][x] != " ":
-            raise Exception("Field already filled")
+        if board is not None:
+            board.reset(creator, otherPlayer)
+        else:
+            self._boards[ctx.channel] = Board(creator, otherPlayer)
 
-        if self.current_player_user == player:
-            raise Exception(f"{player_name} :unamused: Wait your turn!")
+        # Null check
+        assert isinstance(board, Board)
 
-        self.current_player_idx = (self.current_player_idx+1) % 2
-        self.field[y][x] = self.player_symbol[self.current_player_idx]
-        self.current_player_user = player
+        await ctx.send("New game started!")
+        await ctx.send(f" {user_name(creator)} vs {user_name(otherPlayer)}")
+        await ctx.send(board.print())
 
-    def check_full(self):
-        for i in range(3):
-            for j in range(3):
-                if self.field[i][j] == " ":
-                    return False
-        return True
+    async def place(self,
+                    ctx: commands.Context,
+                    arg1: str,
+                    arg2: Optional[int]):
+        name = user_name(ctx.author)
+        board = self._get_board(ctx.channel)
+        try:
+            x, y = self._handle_arguments(arg1, arg2)
+        except Exception as e:
+            await ctx.send(e)
+            return
+        else:
+            await self._place_token(ctx, board, x, y, name)
 
-    def check_winner(self) -> Optional[str]:
-        # Diagonals
-        if (self.field[0][0] == self.field[1][1] == self.field[2][2] != " "):
-            return self.player_symbol[self.current_player_idx]
-        if (self.field[0][2] == self.field[1][1] == self.field[2][0] != " "):
-            return self.player_symbol[self.current_player_idx]
-        for i in range(3):
-            if (self.field[i][0]
-                == self.field[i][1]
-                    == self.field[i][2]
-                    != " "):
-                return self.player_symbol[self.current_player_idx]
-            if (self.field[0][i]
-                == self.field[1][i]
-                    == self.field[2][i]
-                    != " "):
-                return self.player_symbol[self.current_player_idx]
+    async def _place_token(self,
+                           board: Board,
+                           ctx: commands.Context,
+                           x: int,
+                           y: int,
+                           name: str):
+        try:
+            board.setField(x, y-1, ctx.author)
+        except Exception as e:
+            await ctx.send(e)
+        else:
+            if board.check_full():
+                await ctx.send(board.print())
+                await ctx.send(f"It's a draw." +
+                               f"Better luck next time" +
+                               " :arrows_counterclockwise:")
+                self._delete_board(ctx.channel)
+                return
 
-        return None
+            winner = board.check_winner()
+            if (winner):
+                await ctx.send(board.print())
+                await ctx.send(f"**{user_name(winner)}** has won\n" +
+                               f"Congratulations" +
+                               " :partying_face:")
+                self._delete_board(ctx.channel)
+                return
+            else:
+                await ctx.send(board.print())
+                return
 
-    def print(self) -> str:
-        return f"""```
-  A B C
-1 {"|".join(self.field[0])}
-  ------
-2 {"|".join(self.field[1])}
-  ------
-3 {"|".join(self.field[2])}```"""
+    def _handle_arguments(self, argarg1: str,
+                          arg2: Optional[int]) -> Tuple[int, int]:
+
+        arg1 = arg1.upper()
+        valid, err = self._verify_arguments(arg1, arg2)
+        print(valid, err)
+        print(arg1, arg2)
+        if (not valid):
+            raise Exception(err)
+
+        x = arg1 if arg2 else arg1[0]
+        y = arg2 if arg2 else int(arg1[1])
+        return self._x_mapping[x], y
+
+    def _verify_arguments(self,
+                          x: str,
+                          y: Optional[int]) -> Tuple[bool, Optional[str]]:
+        if (y is not None):
+            if (x not in ["A", "B", "C"]):
+                return False, "Only a, A, b, B, c, C"
+            if (y not in [1, 2, 3]):
+                return False, "Only 1, 2, 3"
+        else:
+            if len(x) != 2:
+                return False, f"Invalid argument {x}"
+            if (x[0] not in ["A", "B", "C"]):
+                return False, "Only a, A, b, B, c, C"
+            if (int(x[1]) not in [1, 2, 3]):
+                return False, "Only 1, 2, 3"
+
+        return True, None
+
+    def _get_board(self, channel: abc.Messageable) -> Optional[Board]:
+        return self._boards[channel]
+
+    def _delete_board(self, channel: abc.Messageable):
+        del self._boards[channel]
