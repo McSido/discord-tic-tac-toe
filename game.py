@@ -15,18 +15,21 @@ class Game():
 
     def __init__(self):
         # Channel -> Board
-        self._boards: Dict[abc.Messageable, Board] = {}
+        self._boards: Dict[str, Board] = {}
 
     async def new_game(self,
                        ctx: commands.Context,
                        creator: User,
                        otherPlayer: User):
-        board = self._get_board(ctx.channel)
 
-        if board is not None:
+        if ctx.channel.id in self._boards:
+            board = self._get_board(ctx.channel)
+            assert isinstance(board, Board)
             board.reset(creator, otherPlayer)
         else:
-            self._boards[ctx.channel] = Board(creator, otherPlayer)
+            self._boards[ctx.channel.id] = Board(creator, otherPlayer)
+
+        board = self._get_board(ctx.channel)
 
         # Null check
         assert isinstance(board, Board)
@@ -113,7 +116,7 @@ class Game():
         return True, None
 
     def _get_board(self, channel: abc.Messageable) -> Optional[Board]:
-        return self._boards[channel]
+        return self._boards[channel.id]
 
     def _delete_board(self, channel: abc.Messageable):
-        del self._boards[channel]
+        del self._boards[channel.id]
