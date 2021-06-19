@@ -52,7 +52,14 @@ class Game():
                     arg1: str,
                     arg2: Optional[int]):
         name = user_name(ctx.author)
+
         board = self._get_board(ctx.channel)
+
+        if (board is None):
+            await ctx.send(":x: There is currently no game running\n" +
+                           "Start a new one if you want to play")
+            return
+
         try:
             x, y = self._handle_arguments(arg1, arg2)
         except Exception as e:
@@ -62,8 +69,8 @@ class Game():
             await self._place_token(ctx, board, x, y, name)
 
     async def _place_token(self,
-                           board: Board,
                            ctx: commands.Context,
+                           board: Board,
                            x: int,
                            y: int,
                            name: str):
@@ -83,7 +90,7 @@ class Game():
             winner = board.check_winner()
             if (winner):
                 await ctx.send(board.print())
-                await ctx.send(f"**{user_name(winner)}** has won\n" +
+                await ctx.send(f"@{user_name(winner)} has won\n" +
                                f"Congratulations" +
                                " :partying_face:")
                 self._delete_board(ctx.channel)
@@ -92,13 +99,11 @@ class Game():
                 await ctx.send(board.print())
                 return
 
-    def _handle_arguments(self, argarg1: str,
+    def _handle_arguments(self, arg1: str,
                           arg2: Optional[int]) -> Tuple[int, int]:
 
         arg1 = arg1.upper()
         valid, err = self._verify_arguments(arg1, arg2)
-        print(valid, err)
-        print(arg1, arg2)
         if (not valid):
             raise Exception(err)
 
@@ -125,7 +130,7 @@ class Game():
         return True, None
 
     def _get_board(self, channel: abc.Messageable) -> Optional[Board]:
-        return self._boards[channel.id]
+        return self._boards[channel.id] if channel.id in self._boards else None
 
     def _delete_board(self, channel: abc.Messageable):
         del self._boards[channel.id]

@@ -24,13 +24,13 @@ class Board():
     def reset(self, player1: User, player2: User):
         self.field = [[" ", " ", " "] for i in range(3)]
         self.players = [Player(player1, "X"), Player(player2, "O")]
-        self.curr_player_idx = 0
+        self.next_player_idx = 0
 
     def setField(self, x: int, y: int, player: Player):
         if self.field[y][x] != " ":
             raise Exception("Field already filled")
 
-        if self._get_current_player().user == player:
+        if self._get_last_player().user == player:
             raise Exception(f"{user_name(player)} :unamused: Wait your turn!")
 
             if player not in [p.user for p in self.player]:
@@ -38,9 +38,8 @@ class Board():
                     f"Sorry {user_name(player)} you are" +
                     " not part of the current game :confused:")
 
-        self.current_player_idx = (self.curr_player_idx+1) % 2
-        self.field[y][x] = self._get_current_player().symbol
-        self.current_player_user = player
+        self.field[y][x] = self._get_next_player().symbol
+        self.next_player_idx = (self.next_player_idx+1) % 2
 
     def check_full(self):
         for i in range(3):
@@ -52,20 +51,20 @@ class Board():
     def check_winner(self) -> Optional[User]:
         # Diagonals
         if (self.field[0][0] == self.field[1][1] == self.field[2][2] != " "):
-            return self._get_current_player().user
+            return self._get_last_player().user
         if (self.field[0][2] == self.field[1][1] == self.field[2][0] != " "):
-            return self._get_current_player().user
+            return self._get_last_player().user
         for i in range(3):
             if (self.field[i][0]
                 == self.field[i][1]
                     == self.field[i][2]
                     != " "):
-                return self._get_current_player().user
+                return self._get_last_player().user
             if (self.field[0][i]
                 == self.field[1][i]
                     == self.field[2][i]
                     != " "):
-                return self._get_current_player().user
+                return self._get_last_player().user
 
         return None
 
@@ -78,5 +77,8 @@ class Board():
   ------
 3 {"|".join(self.field[2])}```"""
 
-    def _get_current_player(self):
-        return self.players[self.curr_player_idxs]
+    def _get_next_player(self):
+        return self.players[self.next_player_idx]
+
+    def _get_last_player(self):
+        return self.players[(self.next_player_idx+1) % 2]
